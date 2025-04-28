@@ -232,9 +232,11 @@ dml <- function(y, d, x,
       if (verbose) cat("- Tuning Model for Y (non-parametric).\n")
       dx = cbind(d, x)
       yreg <- tune_model(x = dx, y = ytil, args = yreg)
-      if (verbose) cat("-- Best Tune:\n")
-      print(yreg$tuneGrid)
-      cat("\n")
+      if (verbose) {
+        cat("-- Best Tune:\n")
+        print(yreg$tuneGrid)
+        cat("\n")
+      }
     }
       out$dreg <- dreg
       out$yreg <- yreg
