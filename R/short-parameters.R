@@ -31,7 +31,7 @@ ate.npm <- function(y, d, parameter = "all",
   RRs          <- ((d/dhat.t - (1-d)/(1-dhat.t)))*lbar
   Ms           <- (yhat1 - yhat0)*l
   theta.s      <- mean(Ms +  (y - gs)*RRs)
-  psi.theta.s  <- Ms +   (y - gs)*RRs - theta.s
+  psi.theta.s  <- Ms +   (y - gs)*RRs - theta.s * l
 
   # Scaling terms (still as "global" parameters)
 
