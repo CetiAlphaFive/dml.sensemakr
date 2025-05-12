@@ -72,4 +72,4 @@ var(alpha)- var(alphas)
 
 Eoxa/p.f^2 - Eox/p.f^2
 
-alpha0 <-
+# alpha0 <-

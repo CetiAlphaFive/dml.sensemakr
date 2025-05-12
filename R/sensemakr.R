@@ -184,13 +184,25 @@ plot.dml.sensemakr <- function(model,
                                level = 0.95,
                                combine.method = "median",
                                ...){
-  ovb_contour_plot(model$model,
-                   parameter = parameter,
-                   which.bound = which.bound,
-                   level = level,
-                   rho2 = model$info$rho2,
-                   cf.y = model$info$cf.y,
-                   cf.d = model$info$cf.d,
-                   bound.label = model$info$bound.label,
-                   combine.method = combine.method, ...)
+  if (!"bound.label" %in% names(list(...))) {
+    ovb_contour_plot(model$model,
+                     parameter = parameter,
+                     which.bound = which.bound,
+                     level = level,
+                     rho2 = model$info$rho2,
+                     cf.y = model$info$cf.y,
+                     cf.d = model$info$cf.d,
+                     bound.label = model$info$bound.label,
+                     combine.method = combine.method, ...)
+  } else {
+    ovb_contour_plot(model$model,
+                     parameter = parameter,
+                     which.bound = which.bound,
+                     level = level,
+                     rho2 = model$info$rho2,
+                     cf.y = model$info$cf.y,
+                     cf.d = model$info$cf.d,
+                     combine.method = combine.method, ...)
+  }
+
 }

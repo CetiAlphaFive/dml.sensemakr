@@ -14,6 +14,7 @@ dml(
   groups = NULL,
   cf.folds = 5,
   cf.reps = 1,
+  cf.seed = NULL,
   ps.trim = 0.01,
   reg = "ranger",
   yreg = reg,
@@ -44,6 +45,8 @@ dml_gate(dml.fit, groups, ...)
 \item{cf.folds}{number of cross-fitting folds. Default is \code{2}.}
 
 \item{cf.reps}{number of cross-fitting repetitions. Default is \code{1}.}
+
+\item{cf.seed}{optional integer. A random seed for reproducibility of fold assignments.}
 
 \item{ps.trim}{trims propensity scores lower than \code{ps.trim} and greater than \code{1-ps.trim}, in order to obtain more stable estimates. This is only relevant for the case of a binary treatment.}
 
@@ -99,7 +102,7 @@ x <- model.matrix(~ -1 + age + inc  + educ+ fsize + marr + twoearn + pira + hown
 
 ## compute income quartiles for group ATE.
 g1 <- cut(x[,"inc"], quantile(x[,"inc"], c(0, 0.25,.5,.75,1), na.rm = TRUE),
-         labels = c("q1", "q2", "q3", "q4"), include.lowest = T)
+         labels = c("q1", "q2", "q3", "q4"), include.lowest = TRUE)
 # run DML (nonparametric model)
 ## 2 folds (change as needed)
 ## 1 repetition (change as needed)

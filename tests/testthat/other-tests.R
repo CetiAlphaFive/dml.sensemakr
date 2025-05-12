@@ -45,7 +45,7 @@ model <- dml.401k.plm
 resY <- sapply(model$fits, function(x) x$preds$yhat)
 cbind(resY, model$data$y)
 R2s <- apply(resY, 2, function(x)max(1-var(x)/var(model$data$y),0))
-<- combine.mean(R2s, R2s)["estimate"]
+# <- combine.mean(R2s, R2s)["estimate"]
 length(resY)
 length(y)
 str(model$fits)

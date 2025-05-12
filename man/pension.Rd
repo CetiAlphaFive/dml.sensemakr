@@ -5,7 +5,7 @@
 \alias{pension}
 \title{Net financial assets and 401(k) eligibility}
 \format{
-A data.frame with 3010 observations and 34 variables:
+A data.frame with 9915 observations and 44 variables, among them:
 \itemize{
  \item \strong{net_tfa:} net total financial assets
  \item \strong{e401:} =1 if employer offers 401(k)
@@ -28,6 +28,7 @@ data('pension')
 Data on net financial assets and 401(k) eligibility.
 }
 \examples{
+data('pension')
 head(pension)
 }
 \keyword{datasets}

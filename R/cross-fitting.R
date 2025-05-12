@@ -4,6 +4,7 @@ cross.fitting <- function(y, d, x,
                           model = c("plm","npm"),
                           d1 = 1, d0 = 0,
                           cf.folds = 5,
+                          cf.seed = NULL,
                           yreg = list(method = "ranger",
                                       trControl = trainControl(method = "none"),
                                       tuneGrid = data.frame(mtry = sqrt(ncol(x)), splitrule = "variance", min.node.size = 5)),
@@ -19,6 +20,7 @@ cross.fitting <- function(y, d, x,
 
   out <- list()
 
+  if (!is.null(cf.seed)) set.seed(cf.seed)
 
   # sample splitting
   nobs     <- nrow(x) # number of observations

@@ -71,7 +71,7 @@ x <- model.matrix(~ -1 + age + inc  + educ+ fsize + marr + twoearn + pira + hown
 
 ## compute income quartiles for group ATE.
 g1 <- cut(x[,"inc"], quantile(x[,"inc"], c(0, 0.25,.5,.75,1), na.rm = TRUE),
-          labels = c("q1", "q2", "q3", "q4"), include.lowest = T)
+          labels = c("q1", "q2", "q3", "q4"), include.lowest = TRUE)
 
 # run DML (nonparametric model)
 ## 2 folds (change as needed)

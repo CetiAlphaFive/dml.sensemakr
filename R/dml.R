@@ -8,8 +8,9 @@
 ##' @param model specifies the model. Current available options are \code{plm} for a partially linear model, and \code{npm} for a fully non-parametric model.
 ##' @param target specifies the target causal quantity of interest. Current available option is \code{ate} (ATE - average treatment effect). Note that for the partially linear model with a continuous treatment the ATE also equals the average causal derivative (ACD). For the nonparametric model, the ATE is only available for binary treatments. Other options (eg., ACD for the nonparametric model, ATT) will be available soon.
 ##' @param groups a \code{\link{factor}} or \code{\link{numeric}} vector indicating group membership. Groups must be a deterministic function of \code{x}.
-##' @param  cf.folds number of cross-fitting folds. Default is \code{2}.
+##' @param cf.folds number of cross-fitting folds. Default is \code{2}.
 ##' @param cf.reps number of cross-fitting repetitions. Default is \code{1}.
+##' @param cf.seed optional integer. A random seed for reproducibility of fold assignments.
 ##' @param ps.trim trims propensity scores lower than \code{ps.trim} and greater than \code{1-ps.trim}, in order to obtain more stable estimates. This is only relevant for the case of a binary treatment.
 ##' @param reg details of the machine learning method to be used for estimating the nuisance parameters (e.g, regression functions of the treatment and the outcome). Currently, this should be specified using the same arguments as \code{\link{caret}}'s \code{\link{train}} function. The default is random forest using \code{\link{ranger}}. The default method is fast and usually works well for many applications.
 ##' @param yreg same as \code{reg}, but specifies arguments for the outcome regression alone. Default is the same value of \code{reg}.
@@ -49,7 +50,7 @@
 ##'
 ##'## compute income quartiles for group ATE.
 ##'g1 <- cut(x[,"inc"], quantile(x[,"inc"], c(0, 0.25,.5,.75,1), na.rm = TRUE),
-##'          labels = c("q1", "q2", "q3", "q4"), include.lowest = T)
+##'          labels = c("q1", "q2", "q3", "q4"), include.lowest = TRUE)
 ##'# run DML (nonparametric model)
 ##'## 2 folds (change as needed)
 ##'## 1 repetition (change as needed)
@@ -88,6 +89,7 @@ dml <- function(y, d, x,
                 groups = NULL,
                 cf.folds = 5,
                 cf.reps  = 1,
+                cf.seed = NULL,
                 ps.trim = 0.01,
                 reg = "ranger",
                 yreg = reg,
@@ -260,6 +262,7 @@ dml <- function(y, d, x,
                                     d0           = ifelse(d.class, "zero", 0),
                                     model        = model,
                                     cf.folds     = cf.folds,
+                                    cf.seed      = cf.seed,
                                     yreg         = yreg,
                                     dreg         = dreg,
                                     verbose      = verbose,

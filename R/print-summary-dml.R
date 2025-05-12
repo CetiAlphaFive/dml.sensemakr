@@ -22,7 +22,7 @@
 ##'
 ##' ## compute income quartiles for group ATE.
 ##' g1 <- cut(x[,"inc"], quantile(x[,"inc"], c(0, 0.25,.5,.75,1), na.rm = TRUE),
-##'           labels = c("q1", "q2", "q3", "q4"), include.lowest = T)
+##'           labels = c("q1", "q2", "q3", "q4"), include.lowest = TRUE)
 ##'
 ##' # run DML (nonparametric model)
 ##' ## 2 folds (change as needed)
@@ -117,7 +117,7 @@ confint.dml <- function(object, params = NULL, level = 0.95, combine.method = "m
   ses <- se(object, combine.method = combine.method)
   calc_confint(cf =cf, ses =ses,  params = params, level = level)
 }
-                   
+
 format.perc <- function (probs, digits) paste(format(100 * probs, trim = TRUE, scientific = FALSE, digits = digits), "%")
 
 calc_confint <- function(cf, ses, params=NULL, level) {

@@ -1,19 +1,24 @@
 # loads package
 library(dml.sensemakr)
 
-## loads data
-data("pension")
-y <- pension$net_tfa
-d <- pension$e401
-x <- model.matrix(~ -1 + age + inc + educ+ fsize + marr + twoearn + pira + hown, data = pension)
-
-## computes income quartiles
-g1 <- cut(x[,"inc"], quantile(x[,"inc"], c(0, 0.25,.5,.75,1), na.rm = TRUE),
-          labels = c("q1", "q2", "q3", "q4"), include.lowest = T)
-
 test_that("Testing 401k PLM", {
   set.seed(10)
-  dml.401k.plm <- dml(y, d, x, groups = g1, model = "plm", target = "ate")
+
+  ## loads data
+  data("pension")
+  # y <- pension$net_tfa
+  # d <- pension$e401
+  x <- model.matrix(~ -1 + age + inc + educ+ fsize + marr + twoearn + pira + hown, data = pension)
+
+  ## computes income quartiles
+  # g1 <- cut(x[,"inc"], quantile(x[,"inc"], c(0, 0.25,.5,.75,1), na.rm = TRUE),
+  #           labels = c("q1", "q2", "q3", "q4"), include.lowest = T)
+
+  dml.401k.plm <- dml(pension$net_tfa, pension$e401,
+                      x,
+                      groups = cut(x[,"inc"], quantile(x[,"inc"], c(0, 0.25,.5,.75,1), na.rm = TRUE),
+                                   labels = c("q1", "q2", "q3", "q4"), include.lowest = T),
+                      model = "plm", target = "ate")
   plot(dml.401k.plm)
   dml.401k.plm
   summary(dml.401k.plm)
