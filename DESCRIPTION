@@ -9,7 +9,8 @@ Authors@R: c(
   )
 Author: Carlos Cinelli [aut, cre],
   Victor Chernozhukov [aut],
-  Vasilis Syrgkanis [aut]
+  Vasilis Syrgkanis [aut],
+  Juejue Wang [aut]
 Maintainer: Carlos Cinelli <carloscinelli@hotmail.com>
 Description: Implements a suite of sensitivity analysis tools 
   for Debiased Machine Learning as discussed in Chernozhukov, V., Cinelli, C., Newey, W., Sharma A., and Syrgkanis, V. (2021). 

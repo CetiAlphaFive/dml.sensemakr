@@ -133,9 +133,6 @@ plot(sens.401k.npm, which.bound = "upr", bound.label = "Max match (3 years)", co
 par(oldpar)
 ```
 
-```{r}
-
-```
 
 ```{r, fig.width=8}
 # confidence bounds plot
@@ -153,6 +150,7 @@ ggplot(df2, aes(x = groups, y = estimate)) + geom_line() +
 ```
 
 ```{r}
+# Rethink: there could be a problem with the benchmark function (line 109, as we used yhat)
 # benchmarks
 bench.npm <- dml_benchmark(dml.401k.npm, benchmark_covariates = c("inc", "pira", "twoearn"))
 bench.npm
