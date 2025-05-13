@@ -178,6 +178,11 @@ cross.fitting <- function(y, d, x,
   if(model == "plm"){
     out$preds$dhat <- dhat
     out$preds$yhat <- yhat
+
+    rmse_dhat <- sqrt(mean((num(d) - dhat)^2))
+    rmse_yhat <- sqrt(mean((num(y) - yhat)^2))
+    out$rmse$dhat <- rmse_dhat
+    out$rmse$yhat <- rmse_yhat
   }
 
   if(model == "npm"){
@@ -188,6 +193,15 @@ cross.fitting <- function(y, d, x,
     out$preds$yhat  <- yhat
     out$preds$yhat0 <- yhat0
     out$preds$yhat1 <- yhat1
+
+    rmse_dhat <- sqrt(mean((num(d) - dhat)^2))
+    rmse_yhat0 <- sqrt(mean((num(y[num(d) == 0]) -
+                               yhat0[num(d) == 0])^2))
+    rmse_yhat1 <- sqrt(mean((num(y[num(d) == 1]) -
+                               yhat1[num(d) == 1])^2))
+    out$rmse$dhat <- rmse_dhat
+    out$rmse$yhat0 <- rmse_yhat0
+    out$rmse$yhat1 <- rmse_yhat1
   }
   if(verbose) cat("\n")
 
