@@ -27,7 +27,7 @@
 ##'  \item{\code{data}}{A \code{list} with the data used.}
 ##'  \item{\code{call}}{The original call used to fit the model.}
 ##'  \item{\code{info}}{A \code{list} with general information and arguments of the DML fitting procedure.}
-##'  \item{\code{fits}}{A \code{list} with the the predictions of each repetition.}
+##'  \item{\code{fits}}{A \code{list} with the predictions of each repetition.}
 ##'  \item{\code{results}}{A \code{list} with the results (influence functions and estimates) for each repetition.}
 ##'  \item{\code{coefs}}{A \code{list} with the estimates and standard errors for each repetition.}
 ##' }
