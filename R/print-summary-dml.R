@@ -79,7 +79,7 @@ summary.dml <- function(object, combine.method = "median", ...){
 coef.dml <- function(object, combine.method = "median", ...){
   ate <- sapply(object$coefs$main, function(x) x[combine.method, "estimate"])
     #object$coefs$main[combine.method, "estimate"]
-  if (!is.null(object$coef$groups)) {
+  if (!is.null(object$coefs$groups)) {
     gate <- sapply(object$coefs$groups, function(x) x[combine.method, "estimate"])
   } else{
     gate = NULL
