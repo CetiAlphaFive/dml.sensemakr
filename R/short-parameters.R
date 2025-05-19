@@ -6,8 +6,20 @@ psi.sd <- function(psi){
 
 # trims propensity score
 trim.ps <- function(ps, trim = 0.02){
-  ps[ps < trim] <- trim
-  ps[ps > 1-trim] <- 1 - trim
+  if (is.numeric(trim)) {
+    if (length(trim) == 1) {
+      trim <- list(lower = trim, upper = 1 - trim)
+    } else {
+      stop("'trim' must be a single number, or a named list.")
+    }
+  } else if (is.list(trim)) {
+    if (!all(c("lower", "upper") %in% names(trim))) {
+      stop("'trim' list must be named with 'lower' and 'upper'.")
+    }
+  }
+
+  ps[ps < trim$lower] <- trim$lower
+  ps[ps > trim$upper] <- trim$upper
   return(ps)
 }
 

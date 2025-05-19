@@ -48,7 +48,7 @@ dml_gate(dml.fit, groups, ...)
 
 \item{cf.seed}{optional integer. A random seed for reproducibility of fold assignments.}
 
-\item{ps.trim}{trims propensity scores lower than \code{ps.trim} and greater than \code{1-ps.trim}, in order to obtain more stable estimates. This is only relevant for the case of a binary treatment.}
+\item{ps.trim}{trims propensity scores lower than \code{ps.trim} and greater than \code{1-ps.trim}, in order to obtain more stable estimates. Or a named list with elements \code{lower} and \code{upper} specifying the lower and upper bounds for trimming. This is only relevant for the case of a binary treatment.}
 
 \item{reg}{details of the machine learning method to be used for estimating the nuisance parameters (e.g, regression functions of the treatment and the outcome). Currently, this should be specified using the same arguments as \code{\link{caret}}'s \code{\link{train}} function. The default is random forest using \code{\link{ranger}}. The default method is fast and usually works well for many applications.}
 
