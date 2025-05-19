@@ -156,7 +156,8 @@ print.summary_dml <- function(x, digits = max(3L, getOption("digits") - 3L), int
   cat("", "Model:", ifelse(x$info$model == "plm", "Partially Linear", "Nonparametric"), "\n")
   cat("", "Cross-Fitting:",x$info$cf.folds, "folds,", x$info$cf.reps, "reps", "\n")
   cat("", "ML Method:",
-      "outcome", paste0("(", attr(x$info$yreg$method, "name"), ", R2 = ", round(x$r2y*100,3), "%),"),
+      "outcome", paste0("(yreg0:", attr(x$info$yreg$yreg0$method, "name"),
+                        ", yreg1:", attr(x$info$yreg$yreg1$method, "name"), ", R2 = ", round(x$r2y*100,3), "%),"),
       "treatment", paste0("(", attr(x$info$dreg$method,"name"), ", R2 = ", round(x$r2d*100,3), "%)\n"))
   cat("", "Tuning:", ifelse(x$info$dirty.tuning, "dirty", "clean"), "\n")
 

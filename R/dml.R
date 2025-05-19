@@ -13,7 +13,7 @@
 ##' @param cf.seed optional integer. A random seed for reproducibility of fold assignments.
 ##' @param ps.trim trims propensity scores lower than \code{ps.trim} and greater than \code{1-ps.trim}, in order to obtain more stable estimates. This is only relevant for the case of a binary treatment.
 ##' @param reg details of the machine learning method to be used for estimating the nuisance parameters (e.g, regression functions of the treatment and the outcome). Currently, this should be specified using the same arguments as \code{\link{caret}}'s \code{\link{train}} function. The default is random forest using \code{\link{ranger}}. The default method is fast and usually works well for many applications.
-##' @param yreg same as \code{reg}, but specifies arguments for the outcome regression alone. Default is the same value of \code{reg}.
+##' @param yreg same as \code{reg}, but specifies arguments for the outcome regression alone. Default is the same value of \code{reg}. Or a named list with elements \code{yreg0} and \code{yreg1} specifying separate methods for each.
 ##' @param dreg same as \code{reg}, but specifies arguments for the treatment regression alone. Default is the same value of \code{reg}.
 ##' @param dirty.tuning should the tuning of the machine learning method happen within each cross-fit fold ("clean"), or using all the data ("dirty")? Default is dirty tuning (\code{dirty.tuning = T}). As long as the number of choices for the tuning parameters is not too big, dirty tuning is faster and should not affect the asymptotic guarantees of DML.
 ##' @param save.models should the fitted models of each iterated be saved? Default is \code{FALSE}. Note that setting this to true could end up using a lot of memory.
@@ -150,8 +150,20 @@ dml <- function(y, d, x,
     d <- factor(d, levels = c(0,1), labels = c("zero", "one"))
   }
 
+  d0 <- ifelse(d.class, "zero", 0)
+  d1 <- ifelse(d.class, "one", 1)
 
-  yreg <- caretArgs(yreg)
+  if (is.list(yreg) &&
+      isTRUE(all.equal(tolower(names(yreg)), c("yreg0", "yreg1")))) {
+    yreg0 <- yreg$yreg0
+    yreg1 <- yreg$yreg1
+  } else {
+    yreg0 <- yreg1 <- yreg
+  }
+
+  yreg0 <- caretArgs(yreg0)
+  yreg1 <- caretArgs(yreg1)
+  yreg <- list(yreg0 = yreg0, yreg1 = yreg1)
   dreg <- caretArgs(dreg)
 
   out$info <- list(model = model,
@@ -169,7 +181,8 @@ dml <- function(y, d, x,
     cat("", "Target:", out$info$target , "\n")
     cat("", "Cross-Fitting:", out$info$cf.folds, "folds,", out$info$cf.reps, "reps", "\n")
     cat("", "ML Method:",
-        "outcome", paste0("(", attr(out$info$yreg$method, "name"), "),"),
+        "outcome", paste0("(yreg0:", attr(out$info$yreg$yreg0$method, "name"),
+                          ", yreg1:", attr(out$info$yreg$yreg1$method, "name"), "),"),
         "treatment", paste0("(", attr(out$info$dreg$method,"name"), ")\n"))
     cat("", "Tuning:", ifelse(out$info$dirty.tuning, "dirty", "clean"), "\n")
     cat("\n")
@@ -191,10 +204,30 @@ dml <- function(y, d, x,
       muy <- min(ytil)
       sdy <- max(ytil) - min(ytil)
       ytil <- (ytil - muy)/sdy
+
+      if (model == "npm" & any(target %in% c("ate","att", "atu"))) {
+        ytil0 <- y[d == d0]
+        ytil1 <- y[d == d1]
+
+        muy0 <- min(ytil0)
+        sdy0 <- max(ytil0) - min(ytil0)
+        ytil0 <- (ytil0 - muy0)/sdy0
+
+        muy1 <- min(ytil1)
+        sdy1 <- max(ytil1) - min(ytil1)
+        ytil1 <- (ytil1 - muy1)/sdy1
+      }
     } else {
       ytil <- y
       muy <- 0
       sdy <- 1
+
+      if (model == "npm" & any(target %in% c("ate","att", "atu"))) {
+        ytil0 <- y[d == d0]
+        ytil1 <- y[d == d1]
+        muy0 <- muy1 <- 0
+        sdy0 <- sdy1 <- 1
+      }
     }
 
     if (is.numeric(d)) {
@@ -221,7 +254,10 @@ dml <- function(y, d, x,
 
     if (model == "plm") {
       if (verbose) cat("- Tuning Model for Y (partially linear).\n")
-      yreg  <- tune_model(x =  x, y = ytil, args = yreg)
+      if (!isTRUE(all.equal(yreg0, yreg1))) {
+        warning("Only one method should be specified for yreg when using 'plm'; setting 'yreg' to 'yreg0'.")
+      }
+      yreg  <- tune_model(x =  x, y = ytil, args = yreg0)
       if (verbose) {
         cat("-- Best Tune:\n")
         print(yreg$tuneGrid)
@@ -232,11 +268,13 @@ dml <- function(y, d, x,
 
     if (model == "npm") {
       if (verbose) cat("- Tuning Model for Y (non-parametric).\n")
-      dx = cbind(d, x)
-      yreg <- tune_model(x = dx, y = ytil, args = yreg)
+      yreg0 <- tune_model(x = x[d == d0, ,drop = F], y = ytil0, args = yreg0)
+      yreg1 <- tune_model(x = x[d == d1, ,drop = F], y = ytil1, args = yreg1)
+      yreg <- list(yreg0 = yreg0, yreg1 = yreg1)
       if (verbose) {
         cat("-- Best Tune:\n")
-        print(yreg$tuneGrid)
+        print(yreg0$tuneGrid)
+        print(yreg1$tuneGrid)
         cat("\n")
       }
     }

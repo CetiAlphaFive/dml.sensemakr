@@ -27,6 +27,13 @@ cross.fitting <- function(y, d, x,
   fold.id  <- rep.int(1:cf.folds, times = ceiling(nobs/cf.folds))[sample.int(nobs)] # define folds indices
   Id       <- split(1:nobs, fold.id)  # split observation indices into folds
 
+  if (is.list(yreg) &&
+      isTRUE(all.equal(tolower(names(yreg)), c("yreg0", "yreg1")))) {
+    yreg0 <- yreg$yreg0
+    yreg1 <- yreg$yreg1
+  } else {
+    yreg0 <- yreg1 <- yreg
+  }
 
   # predictions
   dhat <- yhat <- yhat1 <-  yhat0 <- rep(NA, nobs)
@@ -75,6 +82,11 @@ cross.fitting <- function(y, d, x,
         muy <- 0
         sdy <- 1
       }
+
+      if (!isTRUE(all.equal(yreg0, yreg1))) {
+        warning("Only one method should be specified for yreg when using 'plm'; setting 'yreg' to 'yreg0'.")
+      }
+      yreg <- yreg0
 
       args.yx  <- c(list(x = x[ -Id[[b]], ,drop = F], y = ytil ), yreg)
       model.yx <- silent.do.call(what = "train", args = args.yx, warnings = warnings)
@@ -133,14 +145,14 @@ cross.fitting <- function(y, d, x,
 
       args.y0x  <- c(
         list(x = x[ -Id[[b]], ,drop = F][dtil == d0, ,drop = F],
-             y = ytil0), yreg)
+             y = ytil0), yreg0)
       model.y0x <-
         silent.do.call(what = "train", args = args.y0x, warnings = warnings)
       metric.y0 <- model.y0x$metric
 
       args.y1x  <- c(
         list(x = x[ -Id[[b]], ,drop = F][dtil == d1, ,drop = F],
-             y = ytil1), yreg)
+             y = ytil1), yreg1)
       model.y1x <-
         silent.do.call(what = "train", args = args.y1x, warnings = warnings)
       metric.y1 <- model.y1x$metric
