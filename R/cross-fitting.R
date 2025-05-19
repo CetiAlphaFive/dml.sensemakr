@@ -115,60 +115,49 @@ cross.fitting <- function(y, d, x,
 
       # y model for npm
       if (is.numeric(y)) {
-        ytil <- y[ -Id[[b]] ]
-        # min-max normalization
-        muy <- min(ytil)
-        sdy <- max(ytil) - min(ytil)
-        ytil <- (ytil - muy)/sdy
+        ytil0 <- y[-Id[[b]]][dtil == d0]
+        muy0 <- min(ytil0)
+        sdy0 <- max(ytil0) - min(ytil0)
+        ytil0 <- (ytil0 - muy0)/sdy0
+
+        ytil1 <- y[-Id[[b]]][dtil == d1]
+        muy1 <- min(ytil1)
+        sdy1 <- max(ytil1) - min(ytil1)
+        ytil1 <- (ytil1 - muy1)/sdy1
       } else {
-        ytil <- y[ -Id[[b]] ]
-        muy <- 0
-        sdy <- 1
+        ytil0 <- y[-Id[[b]]][dtil == d0]
+        ytil1 <- y[-Id[[b]]][dtil == d1]
+        muy0 <- muy1 <- 0
+        sdy0 <- sdy1 <- 1
       }
-
-      # args.ydx  <- c(list(x = dx[ -Id[[b]], ,drop = F], y = ytil), yreg)
-      # model.ydx <- silent.do.call(what = "train", args = args.ydx, warnings = warnings)
-      # metric.y <- model.ydx$metric
-      #
-      # if (save.models) {
-      #   out$model.y[[b]] <- model.ydx
-      #   out$model.d[[b]] <- model.dx
-      # }
-      #
-      # # predictions for npm
-      # yhat[Id[[b]]]  <-  safe.predict(model.ydx, newdata =  dx[ Id[[b]], ,drop = F])*sdy + muy
-      # yhat0[Id[[b]]] <-  safe.predict(model.ydx, newdata = dx0[ Id[[b]], ,drop = F])*sdy + muy
-      # yhat1[Id[[b]]] <-  safe.predict(model.ydx, newdata = dx1[ Id[[b]], ,drop = F])*sdy + muy
-
-      args.ydx  <- c(list(x = dx[ -Id[[b]], ,drop = F], y = ytil), yreg)
-      model.ydx <- silent.do.call(what = "train", args = args.ydx, warnings = warnings)
-      metric.y <- model.ydx$metric
 
       args.y0x  <- c(
         list(x = x[ -Id[[b]], ,drop = F][dtil == d0, ,drop = F],
-             y = ytil[dtil == d0]), yreg)
+             y = ytil0), yreg)
       model.y0x <-
         silent.do.call(what = "train", args = args.y0x, warnings = warnings)
       metric.y0 <- model.y0x$metric
 
       args.y1x  <- c(
         list(x = x[ -Id[[b]], ,drop = F][dtil == d1, ,drop = F],
-             y = ytil[dtil == d1]), yreg)
+             y = ytil1), yreg)
       model.y1x <-
         silent.do.call(what = "train", args = args.y1x, warnings = warnings)
       metric.y1 <- model.y1x$metric
 
+      metric.y <- list(metric.y0 = metric.y0, metric.y1 = metric.y1)
+
       if (save.models) {
-        out$model.y[[b]] <- model.ydx
+        out$model.y[[b]] <- list(model.y0x = model.y0x, model.y1x = model.y1x)
         out$model.y0[[b]] <- model.y0x
         out$model.y1[[b]] <- model.y1x
         out$model.d[[b]] <- model.dx
       }
 
       # predictions for npm
-      yhat[Id[[b]]]  <-  safe.predict(model.ydx, newdata =  dx[ Id[[b]], ,drop = F])*sdy + muy
-      yhat0[Id[[b]]] <-  safe.predict(model.y0x, newdata = x[Id[[b]], ,drop = F])*sdy + muy
-      yhat1[Id[[b]]] <-  safe.predict(model.y1x, newdata = x[Id[[b]], ,drop = F])*sdy + muy
+      yhat0[Id[[b]]] <- safe.predict(model.y0x, newdata = x[Id[[b]], ,drop = F])*sdy0 + muy0
+      yhat1[Id[[b]]] <- safe.predict(model.y1x, newdata = x[Id[[b]], ,drop = F])*sdy1 + muy1
+      yhat[Id[[b]]] <- num(d[Id[[b]]]) * yhat1[Id[[b]]] + (1-num(d[Id[[b]]])) * yhat0[Id[[b]]]
     }
 
   }
@@ -199,9 +188,11 @@ cross.fitting <- function(y, d, x,
                                yhat0[num(d) == 0])^2))
     rmse_yhat1 <- sqrt(mean((num(y[num(d) == 1]) -
                                yhat1[num(d) == 1])^2))
+    rmse_yhat <- sqrt(mean((num(y) - yhat)^2))
     out$rmse$dhat <- rmse_dhat
     out$rmse$yhat0 <- rmse_yhat0
     out$rmse$yhat1 <- rmse_yhat1
+    out$rmse$yhat <- rmse_yhat
   }
   if(verbose) cat("\n")
 
