@@ -327,6 +327,13 @@ dml <- function(y, d, x,
                               num(d),
                               parameter = "all",
                               yhat1, yhat0, dhat, trim = ps.trim)
+      
+      trimmed.idx <- results[[i]]$trim.summary$trimmed_indices
+      results[[i]]$trim.summary$trimmed_obs <- list(
+        y.trimmed = y[trimmed.idx],
+        d.trimmed = d[trimmed.idx],
+        x.trimmed = x[trimmed.idx]
+      )
     }
     if (verbose) cat("\n")
   }

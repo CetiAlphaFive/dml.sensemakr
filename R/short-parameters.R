@@ -17,10 +17,27 @@ trim.ps <- function(ps, trim = 0.02){
       stop("'trim' list must be named with 'lower' and 'upper'.")
     }
   }
+  n <- length(ps)
+  # Identify indices of trimmed observations
+  trimmed_low <- which(ps < trim$lower)
+  trimmed_high <- which(ps > trim$upper)
+  trimmed_indices <- sort(unique(c(trimmed_low, trimmed_high)))
+  trimmed_num <- length(trimmed_indices)
+  trimmed_prop <- trimmed_num/length(ps)
 
   ps[ps < trim$lower] <- trim$lower
   ps[ps > trim$upper] <- trim$upper
-  return(ps)
+  return(list(
+    ps = ps,
+    trim = trim, 
+    trimmed_indices = trimmed_indices,
+    trimmed_num = list(low = length(unique(trimmed_low)),
+                       high = length(unique(trimmed_high)),
+                       all = trimmed_num),
+    trimmed_prop = list(low = length(unique(trimmed_low))/n,
+                        high = length(unique(trimmed_high))/n,
+                        all = trimmed_num/n)
+  ))
 }
 
 
@@ -29,7 +46,8 @@ ate.npm <- function(y, d, parameter = "all",
                     yhat1, yhat0, dhat,
                     trim = 0.02){
   # trim propensity score
-  dhat.t       <- trim.ps(dhat, trim = trim)
+  trim.summary <- trim.ps(dhat, trim = trim)
+  dhat.t       <- trim.summary$ps
 
   # l
   l            <- switch(parameter, all = 1, treat = d/mean(d), untr = (1-d)/(1-mean(d)))
@@ -76,7 +94,9 @@ ate.npm <- function(y, d, parameter = "all",
                      se.nu2.s    = psi.sd(psi.nu2.s),
                      S2          = S2,
                      se.S2       = psi.sd(psi.S2),
-                     cov.theta.S2 = mean(psi.theta.s*psi.S2)/length(psi.S2)))
+                     cov.theta.S2 = mean(psi.theta.s*psi.S2)/length(psi.S2)),
+    
+    trim.summary = trim.summary)
 }
 
 
@@ -150,6 +170,13 @@ ate.att.atu.npm <- function(dml, target, trim = 0.02) {
                           yhat0 = yhat0,
                           dhat  = dhat,
                           trim = trim)
+      
+      trimmed.idx <- res[[i]]$trim.summary$trimmed_indices
+      res[[i]]$trim.summary$trimmed_obs <- list(
+        y.trimmed = y[trimmed.idx],
+        d.trimmed = d[trimmed.idx],
+        x.trimmed = x[trimmed.idx]
+      )
     }
     ate.g[[j]] <- res
   }
@@ -177,6 +204,13 @@ group.ate.npm <- function(dml, groups, trim = 0.02) {
                           yhat0 = yhat0[idx],
                           dhat  = dhat[idx],
                           trim = trim)
+      
+      trimmed.idx <- res[[i]]$trim.summary$trimmed_indices
+      res[[i]]$trim.summary$trimmed_obs <- list(
+        y.trimmed = y[idx][trimmed.idx],
+        d.trimmed = d[idx][trimmed.idx],
+        x.trimmed = x[idx][trimmed.idx]
+      )
     }
     ate.g[[j]] <- res
   }
