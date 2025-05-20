@@ -18,6 +18,7 @@ trim.ps <- function(ps, trim = 0.02){
     }
   }
   n <- length(ps)
+  
   # Identify indices of trimmed observations
   trimmed_low <- which(ps < trim$lower)
   trimmed_high <- which(ps > trim$upper)
@@ -30,7 +31,9 @@ trim.ps <- function(ps, trim = 0.02){
   return(list(
     ps = ps,
     trim = trim, 
-    trimmed_indices = trimmed_indices,
+    trimmed_indices = list(low = unique(trimmed_low),
+                           high = unique(trimmed_high),
+                           all = trimmed_indices),
     trimmed_num = list(low = length(unique(trimmed_low)),
                        high = length(unique(trimmed_high)),
                        all = trimmed_num),
@@ -171,11 +174,19 @@ ate.att.atu.npm <- function(dml, target, trim = 0.02) {
                           dhat  = dhat,
                           trim = trim)
       
-      trimmed.idx <- res[[i]]$trim.summary$trimmed_indices
+      trimmed.all.idx <- res[[i]]$trim.summary$trimmed_indices$all
+      trimmed.low.idx <- res[[i]]$trim.summary$trimmed_indices$low
+      trimmed.high.idx <- res[[i]]$trim.summary$trimmed_indices$high
       res[[i]]$trim.summary$trimmed_obs <- list(
-        y.trimmed = y[trimmed.idx],
-        d.trimmed = d[trimmed.idx],
-        x.trimmed = x[trimmed.idx]
+        all = list(y.trimmed = y[trimmed.all.idx],
+                   d.trimmed = d[trimmed.all.idx],
+                   x.trimmed = x[trimmed.all.idx, ]),
+        low = list(y.trimmed = y[trimmed.low.idx],
+                   d.trimmed = d[trimmed.low.idx],
+                   x.trimmed = x[trimmed.low.idx, ]),
+        high = list(y.trimmed = y[trimmed.high.idx],
+                    d.trimmed = d[trimmed.high.idx],
+                    x.trimmed = x[trimmed.high.idx, ])
       )
     }
     ate.g[[j]] <- res
@@ -205,11 +216,19 @@ group.ate.npm <- function(dml, groups, trim = 0.02) {
                           dhat  = dhat[idx],
                           trim = trim)
       
-      trimmed.idx <- res[[i]]$trim.summary$trimmed_indices
+      trimmed.all.idx <- res[[i]]$trim.summary$trimmed_indices$all
+      trimmed.low.idx <- res[[i]]$trim.summary$trimmed_indices$low
+      trimmed.high.idx <- res[[i]]$trim.summary$trimmed_indices$high
       res[[i]]$trim.summary$trimmed_obs <- list(
-        y.trimmed = y[idx][trimmed.idx],
-        d.trimmed = d[idx][trimmed.idx],
-        x.trimmed = x[idx][trimmed.idx]
+        all = list(y.trimmed = y[idx][trimmed.all.idx],
+                   d.trimmed = d[idx][trimmed.all.idx],
+                   x.trimmed = x[idx, ][trimmed.all.idx, ]),
+        low = list(y.trimmed = y[idx][trimmed.low.idx],
+                   d.trimmed = d[idx][trimmed.low.idx],
+                   x.trimmed = x[idx, ][trimmed.low.idx, ]),
+        high = list(y.trimmed = y[idx][trimmed.high.idx],
+                    d.trimmed = d[idx][trimmed.high.idx],
+                    x.trimmed = x[idx, ][trimmed.high.idx, ])
       )
     }
     ate.g[[j]] <- res

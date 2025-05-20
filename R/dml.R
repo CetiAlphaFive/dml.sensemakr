@@ -328,11 +328,19 @@ dml <- function(y, d, x,
                               parameter = "all",
                               yhat1, yhat0, dhat, trim = ps.trim)
       
-      trimmed.idx <- results[[i]]$trim.summary$trimmed_indices
+      trimmed.all.idx <- results[[i]]$trim.summary$trimmed_indices$all
+      trimmed.low.idx <- results[[i]]$trim.summary$trimmed_indices$low
+      trimmed.high.idx <- results[[i]]$trim.summary$trimmed_indices$high
       results[[i]]$trim.summary$trimmed_obs <- list(
-        y.trimmed = y[trimmed.idx],
-        d.trimmed = d[trimmed.idx],
-        x.trimmed = x[trimmed.idx]
+        all = list(y.trimmed = y[trimmed.all.idx],
+                   d.trimmed = d[trimmed.all.idx],
+                   x.trimmed = x[trimmed.all.idx, ]),
+        low = list(y.trimmed = y[trimmed.low.idx],
+                   d.trimmed = d[trimmed.low.idx],
+                   x.trimmed = x[trimmed.low.idx, ]),
+        high = list(y.trimmed = y[trimmed.high.idx],
+                    d.trimmed = d[trimmed.high.idx],
+                    x.trimmed = x[trimmed.high.idx, ])
       )
     }
     if (verbose) cat("\n")
