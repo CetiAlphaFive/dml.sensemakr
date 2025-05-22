@@ -18,7 +18,7 @@ trim.ps <- function(ps, trim = 0.02){
     }
   }
   n <- length(ps)
-  
+
   # Identify indices of trimmed observations
   trimmed_low <- which(ps < trim$lower)
   trimmed_high <- which(ps > trim$upper)
@@ -30,7 +30,7 @@ trim.ps <- function(ps, trim = 0.02){
   ps[ps > trim$upper] <- trim$upper
   return(list(
     ps = ps,
-    trim = trim, 
+    trim = trim,
     trimmed_indices = list(low = unique(trimmed_low),
                            high = unique(trimmed_high),
                            all = trimmed_indices),
@@ -61,7 +61,10 @@ ate.npm <- function(y, d, parameter = "all",
 
   # ate
   gs           <- (d * yhat1 + (1 - d) * yhat0)
-  RRs          <- ((d/dhat.t - (1-d)/(1-dhat.t)))*lbar
+  RRs          <- switch(parameter,
+                         all   = ((d/dhat.t - (1-d)/(1-dhat.t)))*lbar,
+                         treat = d/mean(d) - ((1-d)/(1-dhat.t))*lbar,
+                         untr  = (d/dhat.t)*lbar - ((1-d)/(1-mean(d))))
   Ms           <- (yhat1 - yhat0)*l
   theta.s      <- mean(Ms +  (y - gs)*RRs)
   psi.theta.s  <- Ms +   (y - gs)*RRs - theta.s * l
@@ -73,8 +76,12 @@ ate.npm <- function(y, d, parameter = "all",
   psi.sigma2.s <- ( (y-gs)^2 - sigma2.s)
 
   # nu2
-  nu2.s        <-  mean(2*( (1/dhat.t)*lbar + (1/(1-dhat.t))*lbar)*l  - RRs^2)
-  psi.nu2.s    <-  2*( (1/dhat.t)*lbar + (1/(1-dhat.t))*lbar)*l  - RRs^2 - nu2.s
+  Msa          <- switch(parameter,
+                         all   = ( (1/dhat.t)*lbar + (1/(1-dhat.t))*lbar)*l,
+                         treat = ( (1/mean(d)) + (1/(1-dhat.t))*lbar)*l,
+                         untr  = ( (1/dhat.t)*lbar + (1/(1-mean(d))))*l)
+  nu2.s        <-  mean(2*Msa - RRs^2)
+  psi.nu2.s    <-  2*Msa  - RRs^2 - nu2.s
 
   # S2
   S2           <- sigma2.s*nu2.s
@@ -98,7 +105,7 @@ ate.npm <- function(y, d, parameter = "all",
                      S2          = S2,
                      se.S2       = psi.sd(psi.S2),
                      cov.theta.S2 = mean(psi.theta.s*psi.S2)/length(psi.S2)),
-    
+
     trim.summary = trim.summary)
 }
 
@@ -173,7 +180,7 @@ ate.att.atu.npm <- function(dml, target, trim = 0.02) {
                           yhat0 = yhat0,
                           dhat  = dhat,
                           trim = trim)
-      
+
       trimmed.all.idx <- res[[i]]$trim.summary$trimmed_indices$all
       trimmed.low.idx <- res[[i]]$trim.summary$trimmed_indices$low
       trimmed.high.idx <- res[[i]]$trim.summary$trimmed_indices$high
@@ -215,7 +222,7 @@ group.ate.npm <- function(dml, groups, trim = 0.02) {
                           yhat0 = yhat0[idx],
                           dhat  = dhat[idx],
                           trim = trim)
-      
+
       trimmed.all.idx <- res[[i]]$trim.summary$trimmed_indices$all
       trimmed.low.idx <- res[[i]]$trim.summary$trimmed_indices$low
       trimmed.high.idx <- res[[i]]$trim.summary$trimmed_indices$high

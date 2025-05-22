@@ -11,9 +11,9 @@
 ##' @param cf.folds number of cross-fitting folds. Default is \code{2}.
 ##' @param cf.reps number of cross-fitting repetitions. Default is \code{1}.
 ##' @param cf.seed optional integer. A random seed for reproducibility of fold assignments.
-##' @param ps.trim trims propensity scores lower than \code{ps.trim} and greater than \code{1-ps.trim}, in order to obtain more stable estimates. Or a named list with elements \code{lower} and \code{upper} specifying the lower and upper bounds for trimming. This is only relevant for the case of a binary treatment.
+##' @param ps.trim trims propensity scores lower than \code{ps.trim} and greater than \code{1-ps.trim}, in order to obtain more stable estimates. Alternatively, a named list with elements \code{lower} and \code{upper} specifying the lower and upper bounds for trimming. This is only relevant for the case of a binary treatment and when \code{model = "npm"}.
 ##' @param reg details of the machine learning method to be used for estimating the nuisance parameters (e.g, regression functions of the treatment and the outcome). Currently, this should be specified using the same arguments as \code{\link{caret}}'s \code{\link{train}} function. The default is random forest using \code{\link{ranger}}. The default method is fast and usually works well for many applications.
-##' @param yreg same as \code{reg}, but specifies arguments for the outcome regression alone. Default is the same value of \code{reg}. Or a named list with elements \code{yreg0} and \code{yreg1} specifying separate methods for each.
+##' @param yreg same as \code{reg}, but specifies arguments for the outcome regression alone. Default is the same value of \code{reg}. Alternatively, a named list with elements \code{yreg0} and \code{yreg1} specifying separate methods for each.
 ##' @param dreg same as \code{reg}, but specifies arguments for the treatment regression alone. Default is the same value of \code{reg}.
 ##' @param dirty.tuning should the tuning of the machine learning method happen within each cross-fit fold ("clean"), or using all the data ("dirty")? Default is dirty tuning (\code{dirty.tuning = T}). As long as the number of choices for the tuning parameters is not too big, dirty tuning is faster and should not affect the asymptotic guarantees of DML.
 ##' @param save.models should the fitted models of each iterated be saved? Default is \code{FALSE}. Note that setting this to true could end up using a lot of memory.
@@ -327,7 +327,7 @@ dml <- function(y, d, x,
                               num(d),
                               parameter = "all",
                               yhat1, yhat0, dhat, trim = ps.trim)
-      
+
       trimmed.all.idx <- results[[i]]$trim.summary$trimmed_indices$all
       trimmed.low.idx <- results[[i]]$trim.summary$trimmed_indices$low
       trimmed.high.idx <- results[[i]]$trim.summary$trimmed_indices$high
