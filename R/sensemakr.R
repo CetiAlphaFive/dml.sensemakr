@@ -75,7 +75,10 @@ sensemakr.dml <- function(model,
   }
 
   # benchmarks
-  if (!is.null(benchmark_covariates) & !is.null(model$results$main$all)) {
+  # if (!is.null(benchmark_covariates) & !is.null(model$results$main$all)) {
+  print("check")
+  if (!is.null(benchmark_covariates) & !is.null(model$results$main[[1]])) {
+    print("check2")
     bench.bounds <- dml_benchmark(model = model, benchmark_covariates = benchmark_covariates)
     out$bench.bounds <- bench.bounds
   }
@@ -118,6 +121,15 @@ print.dml.sensemakr <- function(x,
     cat("\n")
   }
 
+  if (!is.null(object$bench.bounds)) {
+    cat("\nBenchmark Statistic for Sensitivity Scenario:\n")
+    print.dml_benchmark(object$bench.bounds, digits = digits)
+    cat("\nVerbal interpretation of Benchmark Statistic:\n\n")
+    cat("-- gain.Y: the observed strength of association of the benchmark covariate with the outcome.\n")
+    cat("-- gain.D: the observed strength of association of the benchmark covariate with the RR.\n")
+    cat("-- delta: the bias of omitting the benchmark covariate (i.e., theta.sj - theta.s).")
+  }
+
   cat("For more information, check summary.")
 }
 
@@ -156,6 +168,16 @@ summary.dml.sensemakr <- function(object,  digits = max(3L, getOption("digits") 
     cat("\nVerbal interpretation of confidence bounds:\n\n")
     cat("-- The table shows the lower (lwr) and upper (upr) limits of the confidence bounds on the target quantity, considering omitted variables with postulated sensitivity parameters cf.y, cf.d and rho2. The confidence level \"point\" is the relevant coverage for most use cases, and stands for the coverage rate for the true target quantity. The confidence level \"region\" stands for the coverage rate of the true bounds.")
   }
+
+  if (!is.null(object$bench.bounds)) {
+    cat("\nBenchmark Statistic for Sensitivity Scenario:\n")
+    print.dml_benchmark(object$bench.bounds, digits = digits)
+    cat("\nVerbal interpretation of Benchmark Statistic:\n\n")
+    cat("-- gain.Y: the observed strength of association of the benchmark covariate with the outcome.\n")
+    cat("-- gain.D: the observed strength of association of the benchmark covariate with the RR.\n")
+    cat("-- delta: the bias of omitting the benchmark covariate (i.e., theta.sj - theta.s).")
+  }
+
   if (object$model$info$model == "npm") {
   cat("\n\nInterpretation of sensitivity parameters:\n")
   cat(paste0("\n-- cf.y: percentage of the residual variation of the outcome explained by latent variables."))
