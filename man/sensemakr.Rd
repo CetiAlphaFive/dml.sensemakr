@@ -5,7 +5,7 @@
 \alias{sensemakr.dml}
 \title{Sensitivity Analysis for Causal Machine Learning}
 \usage{
-sensemakr(...)
+sensemakr(model, ...)
 
 \method{sensemakr}{dml}(
   model,

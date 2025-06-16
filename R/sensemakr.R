@@ -6,7 +6,9 @@
 ##' @returns An object of class \code{dml.sensemakr}, containing sensitivity analysis results.
 ##'
 ##' @export
-sensemakr <- sensemakr::sensemakr
+sensemakr <- function(model, ...) {
+  UseMethod("sensemakr")
+}
 
 ##' @param model a model created with the function \code{\link{dml}}.
 ##' @param benchmark_covariates  character vector of the names of covariates that will be used to bound the plausible strength of the latent variables.
@@ -40,8 +42,8 @@ sensemakr <- sensemakr::sensemakr
 ##' # contout plots
 ##' plot(sens.401k)
 ##'
-##'@exportS3Method sensemakr::sensemakr dml
-##'@exportS3Method dml.sensemakr::sensemakr dml
+##' @method sensemakr dml
+##' @export
 ##' @rdname sensemakr
 sensemakr.dml <- function(model,
                           benchmark_covariates = NULL,
@@ -76,9 +78,7 @@ sensemakr.dml <- function(model,
 
   # benchmarks
   # if (!is.null(benchmark_covariates) & !is.null(model$results$main$all)) {
-  print("check")
   if (!is.null(benchmark_covariates) & !is.null(model$results$main[[1]])) {
-    print("check2")
     bench.bounds <- dml_benchmark(model = model, benchmark_covariates = benchmark_covariates)
     out$bench.bounds <- bench.bounds
   }
@@ -121,9 +121,9 @@ print.dml.sensemakr <- function(x,
     cat("\n")
   }
 
-  if (!is.null(object$bench.bounds)) {
+  if (!is.null(x$bench.bounds)) {
     cat("\nBenchmark Statistic for Sensitivity Scenario:\n")
-    print.dml_benchmark(object$bench.bounds, digits = digits)
+    print.dml_benchmark(x$bench.bounds, digits = digits)
     cat("\nVerbal interpretation of Benchmark Statistic:\n\n")
     cat("-- gain.Y: the observed strength of association of the benchmark covariate with the outcome.\n")
     cat("-- gain.D: the observed strength of association of the benchmark covariate with the RR.\n")
