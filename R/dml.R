@@ -283,6 +283,9 @@ dml <- function(y, d, x,
 
   }
 
+  if (!is.null(cf.seed)) set.seed(cf.seed)
+  cf.seeds <- sample.int(1e6, size = cf.reps)
+
   fits <- results <-  list()
 
   if (verbose) {
@@ -300,7 +303,7 @@ dml <- function(y, d, x,
                                     d0           = ifelse(d.class, "zero", 0),
                                     model        = model,
                                     cf.folds     = cf.folds,
-                                    cf.seed      = cf.seed,
+                                    cf.seed      = cf.seeds[i],
                                     yreg         = yreg,
                                     dreg         = dreg,
                                     verbose      = verbose,

@@ -28,7 +28,8 @@ print.dml_benchmark <- function(x, digits = max(3L, getOption("digits") - 3L),
 ##' @export
 summary.dml_benchmark <- function(object, combine.method = "mean", na.rm = T, ...){
   comb_fun <- get(combine.method)
-  out <- t(sapply(object, function(x) apply(x,2, comb_fun, na.rm = na.rm)))
+  out <- object
+  out$benchmarks <- t(sapply(object$benchmarks, function(x) apply(x,2, comb_fun, na.rm = na.rm)))
 }
 
 # bench_plm <- function(model, benchmark_covariates) {
@@ -38,14 +39,14 @@ summary.dml_benchmark <- function(object, combine.method = "mean", na.rm = T, ..
 #   if (any(which.not)){
 #     stop("Covariates not found: ", paste(benchmark_covariates[which.not], collapse = ", "), ".")
 #   }
-# 
+#
 #   resY.D   <- sapply(model$fits,
 #                      function(x) lm(model$data$y - x$preds$yhat ~ model$data$d - x$preds$dhat)$res)
 #   resD   <- sapply(model$fits, function(x) model$data$d - x$preds$dhat)
-# 
+#
 #   R2.Y <- (apply(resY.D, 2, function(x) max(1-mean(x^2)/var(model$data$y),0)))
 #   R2.D <- (apply(resD, 2, function(x) max(1-mean(x^2)/var(model$data$d),0)))
-# 
+#
 #   theta.short <- extract_estimate(model$results$main[[1]], "theta.s")
 #   benchmarks <- list()
 #   for (i in seq_along(benchmark_covariates)){
@@ -56,14 +57,14 @@ summary.dml_benchmark <- function(object, combine.method = "mean", na.rm = T, ..
 #     model.call <- model$call
 #     model.call["x"] <- call("xo")
 #     model.wo <- eval(model.call)
-# 
+#
 #     resY.D.wo   <- sapply(model.wo$fits,
 #                        function(x) lm(model.wo$data$y - x$preds$yhat ~ model.wo$data$d - x$preds$dhat)$res)
 #     resD.wo   <- sapply(model.wo$fits, function(x) model.wo$data$d - x$preds$dhat)
-# 
+#
 #     R2.Ywo <- (apply(resY.D.wo, 2, function(x) max(1-mean(x^2)/var(model.wo$data$y),0)))
 #     R2.Dwo <- (apply(resD.wo, 2, function(x) max(1-mean(x^2)/var(model.wo$data$d),0)))
-# 
+#
 #     ## Bias Decomposition
 #     theta.short.wo <- extract_estimate(model.wo$results$main[[1]], "theta.s")
 #     Bias <-  theta.short.wo - theta.short
@@ -76,18 +77,18 @@ summary.dml_benchmark <- function(object, combine.method = "mean", na.rm = T, ..
 #     Cor[valid] <- (abs(Bias[valid])/sqrt(V.g[valid]*V.a[valid]))
 #     Cor <- pmin(1, Cor)
 #     Cor <- Cor*sign(Bias)
-# 
+#
 #     #Gain metrics:
 #     Gain.Y <- pmax(0, (R2.Y-R2.Ywo)/(1-R2.Y))
 #     Gain.D <- pmax(0, (R2.D-R2.Dwo)/(1-R2.D))
-# 
+#
 #     bench <- data.frame(gain.Y = Gain.Y,
 #                         gain.D =  Gain.D,
 #                         rho = Cor,
 #                         theta.s  = theta.short,
 #                         theta.sj = theta.short.wo,
 #                         delta = Bias)
-# 
+#
 #     benchmarks[[covar]] = bench
 #   }
 #   return(benchmarks)
@@ -106,12 +107,19 @@ bench_fun <- function(model, benchmark_covariates){
 
   nu.sq <- extract_estimate(model$results$main[[1]], param = "nu2.s")
   sigma.sq <- extract_estimate(model$results$main[[1]], param = "sigma2.s")
-  
+
   # resY  <- sapply(model$fits, function(x)model$data$y-x$preds$yhat)
   # R2.Y  <- apply(resY, 2, function(x) max(1-var(x)/var(model$data$y),0))
 
   theta.short <- extract_estimate(model$results$main[[1]], "theta.s")
+
+  # short IFs
+  psi.theta.s  <- lapply(model$results$main[[1]], function(x) x$psis$psi.theta.s)
+  psi.sigma2.s <- lapply(model$results$main[[1]], function(x) x$psis$psi.sigma2.s)
+  psi.nu2.s    <- lapply(model$results$main[[1]], function(x) x$psis$psi.nu2.s)
+
   benchmarks <- list()
+  benchmarks_psis <- list()
   for (i in seq_along(benchmark_covariates)) {
     covar <- benchmark_covariates[i]
     cat("\n=== Computing benchmarks using covariate:", covar, " ===\n\n")
@@ -123,30 +131,36 @@ bench_fun <- function(model, benchmark_covariates){
 
     nu.sq.wo <- extract_estimate(model.wo$results$main[[1]], param = "nu2.s")
     sigma.sq.wo <- extract_estimate(model.wo$results$main[[1]], param = "sigma2.s")
-    
+
     # resY.wo  <- sapply(model.wo$fits, function(x) model.wo$data$y - x$preds$yhat)
     # R2.Y.wo  <- apply(resY.wo, 2, function(x) max(1-var(x)/var(model.wo$data$y),0))
 
     ## (Debiased) Bias Decomposition
     theta.short.wo <- extract_estimate(model.wo$results$main[[1]], "theta.s")
+
+    # benchmark IFs
+    psi.theta.s.wo  <- lapply(model.wo$results$main[[1]], function(x) x$psis$psi.theta.s)
+    psi.sigma2.s.wo <- lapply(model.wo$results$main[[1]], function(x) x$psis$psi.sigma2.s)
+    psi.nu2.s.wo    <- lapply(model.wo$results$main[[1]], function(x) x$psis$psi.nu2.s)
+
     Bias <- theta.short.wo - theta.short
-    
+
     # V.g <- apply(resY.wo,2,var) - apply(resY,2,var)
     V.g <- sigma.sq.wo - sigma.sq
     V.a <- nu.sq - nu.sq.wo
 
     valid <- V.g > 0 & V.a > 0
-    Cor <- 0
+    Cor <- rep(0,length(valid))
     Cor[valid] <- (abs(Bias[valid])/sqrt(V.g[valid]*V.a[valid]))
     Cor <- pmin(1, Cor)
     Cor <- Cor*sign(Bias)
 
     #(1- R^2_{a~a_s}) =  (Ea^2 - Ea_s^2)/ E a^2
 
-    # Gain.Y = pmax(0, (R2.Y - R2.Y.wo)/(1 - R2.Y)) 
-    Gain.Y = pmax(0, (sigma.sq.wo - sigma.sq)/sigma.sq) 
+    # Gain.Y = pmax(0, (R2.Y - R2.Y.wo)/(1 - R2.Y))
+    Gain.Y = pmax(0, (sigma.sq.wo - sigma.sq)/sigma.sq)
     Gain.D = pmax(0, (nu.sq - nu.sq.wo)/nu.sq.wo)
-  
+
 
     bench <- data.frame(gain.Y = Gain.Y,
                         gain.D = Gain.D,
@@ -156,6 +170,44 @@ bench_fun <- function(model, benchmark_covariates){
                         delta = Bias)
 
     benchmarks[[covar]] = bench
+
+    ## bounds IFs
+    psi.GY <- Map(function(psi.wo, psi, s, s.wo) {
+      (s * psi.wo - s.wo * psi) / (s^2)
+    }, psi.sigma2.s.wo, psi.sigma2.s, sigma.sq, sigma.sq.wo)
+
+    psi.GD <- Map(function(psi.wo, psi, nu, nu.wo) {
+      (nu.wo * psi - nu * psi.wo) / (nu.wo^2)
+    }, psi.nu2.s.wo, psi.nu2.s, nu.sq, nu.sq.wo)
+
+    psi.rho <- lapply(seq_len(length(valid)), function(k) {
+      if (!valid[k]) {
+        rep(0, nrow(x))
+      } else {
+        ((psi.theta.s.wo[[k]] - psi.theta.s[[k]]) /
+           (sqrt(V.g[k] * V.a[k]))) -
+          ((Bias[k] * (psi.sigma2.s.wo[[k]] - psi.sigma2.s[[k]])) /
+             (2 * (V.g[k]^(3/2)) * sqrt(V.a[k]))) -
+          ((Bias[k] * (psi.nu2.s[[k]] - psi.nu2.s.wo[[k]])) /
+             (2 * (V.a[k]^(3/2)) * sqrt(V.g[k])))
+      }
+    })
+
+    benchmarks_psis[[covar]] = list(
+      psi.theta.s  = psi.theta.s,
+      psi.sigma2.s = psi.sigma2.s,
+      psi.nu2.s    = psi.nu2.s,
+
+      psi.theta.s.wo  = psi.theta.s.wo,
+      psi.sigma2.s.wo = psi.sigma2.s.wo,
+      psi.nu2.s.wo    = psi.nu2.s.wo,
+
+      psi.GY  = psi.GY,
+      psi.GD  = psi.GD,
+      psi.rho = psi.rho
+    )
   }
-  return(benchmarks)
+  return(list(
+    benchmarks      = benchmarks,
+    benchmarks_psis = benchmarks_psis))
 }
