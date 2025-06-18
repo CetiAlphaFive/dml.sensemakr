@@ -370,7 +370,7 @@ ovb_contour_plot.dml <- function(model,
                            level = level)[idx, ifelse(which.bound == "lwr", 1, 2)]
   text(0 + label.bump.x, 0 + label.bump.y,
        paste0(label.unadjusted,
-              "\n(", round(plot_estimate, 0), ")"),
+              "\n(", round(plot_estimate, round), ")"),
        cex = cex.label.text)
 
   if (!is.null(cf.y)){
