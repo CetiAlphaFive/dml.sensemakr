@@ -60,14 +60,25 @@ ate.npm <- function(y, d, parameter = "all",
 
 
   # ate
-  gs           <- (d * yhat1 + (1 - d) * yhat0)
+  gs           <- rep(NA, length(y))
+  gs[d == 1]   <- yhat1[d == 1]
+  gs[d == 0]   <- yhat0[d == 0]
   RRs          <- switch(parameter,
                          all   = ((d/dhat.t - (1-d)/(1-dhat.t)))*lbar,
                          treat = d/mean(d) - ((1-d)/(1-dhat.t))*lbar,
                          untr  = (d/dhat.t)*lbar - ((1-d)/(1-mean(d))))
-  Ms           <- (yhat1 - yhat0)*l
-  theta.s      <- mean(Ms +  (y - gs)*RRs)
-  psi.theta.s  <- Ms +   (y - gs)*RRs - theta.s * l
+  Ms           <- switch(parameter,
+                         all   = (yhat1 - yhat0)*l,
+                         treat = (y - yhat0)*l,
+                         untr  = (yhat1 - y)*l)
+  theta.s      <- switch(parameter,
+                         all   = mean(Ms +  (y - gs)*RRs),
+                         treat = mean(Ms +  (1-d)*(y - gs)*RRs),
+                         untr  = mean(Ms +  d*(y - gs)*RRs))
+  psi.theta.s  <- switch(parameter,
+                         all   = Ms + (y - gs)*RRs - theta.s * l,
+                         treat = Ms + (1-d)*(y - gs)*RRs - theta.s * l,
+                         untr  = Ms + d*(y - gs)*RRs - theta.s * l)
 
   # Scaling terms (still as "global" parameters)
 

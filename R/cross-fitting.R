@@ -2,6 +2,7 @@
 ##'@importFrom  caret trainControl
 cross.fitting <- function(y, d, x,
                           model = c("plm","npm"),
+                          target = "ate",
                           d1 = 1, d0 = 0,
                           cf.folds = 5,
                           cf.seed = NULL,
@@ -166,10 +167,19 @@ cross.fitting <- function(y, d, x,
         out$model.d[[b]] <- model.dx
       }
 
-      # predictions for npm
-      yhat0[Id[[b]]] <- safe.predict(model.y0x, newdata = x[Id[[b]], ,drop = F])*sdy0 + muy0
-      yhat1[Id[[b]]] <- safe.predict(model.y1x, newdata = x[Id[[b]], ,drop = F])*sdy1 + muy1
-      yhat[Id[[b]]] <- num(d[Id[[b]]]) * yhat1[Id[[b]]] + (1-num(d[Id[[b]]])) * yhat0[Id[[b]]]
+      if (all(target == "att")) {
+        yhat0[Id[[b]]] <- safe.predict(model.y0x, newdata = x[Id[[b]], ,drop = F])*sdy0 + muy0
+        yhat1[Id[[b]]][num(d[Id[[b]]]) == 1] <- safe.predict(model.y1x, newdata = x[Id[[b]][num(d[Id[[b]]]) == 1], ,drop = F])*sdy1 + muy1
+      } else if (all(target == "atu")) {
+        yhat0[Id[[b]]][num(d[Id[[b]]]) == 0] <- safe.predict(model.y0x, newdata = x[Id[[b]][num(d[Id[[b]]]) == 0], ,drop = F])*sdy0 + muy0
+        yhat1[Id[[b]]] <- safe.predict(model.y1x, newdata = x[Id[[b]], ,drop = F])*sdy1 + muy1
+      } else {
+        yhat0[Id[[b]]] <- safe.predict(model.y0x, newdata = x[Id[[b]], ,drop = F])*sdy0 + muy0
+        yhat1[Id[[b]]] <- safe.predict(model.y1x, newdata = x[Id[[b]], ,drop = F])*sdy1 + muy1
+      }
+
+      yhat[Id[[b]]][num(d[Id[[b]]]) == 0] <- yhat0[Id[[b]]][num(d[Id[[b]]]) == 0]
+      yhat[Id[[b]]][num(d[Id[[b]]]) == 1] <- yhat1[Id[[b]]][num(d[Id[[b]]]) == 1]
     }
 
   }
