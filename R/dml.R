@@ -121,6 +121,26 @@ dml <- function(y, d, x,
     colnames(x) <- paste0("x", 1:ncol(x))
   }
 
+  # check whether any columns in x are redundant because of an invalid reference group
+  var_names <- list()
+  for (name in colnames(x)) {
+    if ((length(unique(x[,name])) == 1) && (name != "(Intercept)")) {
+      cat("Warning: variable '", name,
+          "' show no variation.\n", sep = "")
+    }
+    prefix <- sub("[0-9]+$", "", name)
+    var_names[[prefix]] <- unique(c(var_names[[prefix]], name))
+  }
+  factor_var <- Filter(function(g) length(g) >= 2, var_names)
+  for (var_name in names(factor_var)) {
+    factor_cols <- factor_var[[var_name]]
+    rowsums <- rowSums(x[, factor_cols, drop = FALSE])
+    if (all(rowsums == 1)) {
+      cat("Warning: The reference category for the variable '", var_name,
+          "' contains no observations.\n", sep = "")
+    }
+  }
+
   if (!is.null(groups)) {
     groups  <- as.factor(groups)
   }
