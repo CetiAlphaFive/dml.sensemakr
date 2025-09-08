@@ -46,17 +46,17 @@ trim.ps <- function(ps, trim = 0.02){
 
 # computes ate for npm
 ate.npm <- function(y, d, parameter = "all",
-                    yhat1, yhat0, dhat,
+                    yhat1, yhat0, dhat, phat,
                     trim = 0.02){
   # trim propensity score
   trim.summary <- trim.ps(dhat, trim = trim)
   dhat.t       <- trim.summary$ps
 
   # l
-  l            <- switch(parameter, all = 1, treat = d/mean(d), untr = (1-d)/(1-mean(d)))
+  l            <- switch(parameter, all = 1, treat = d/phat, untr = (1-d)/(1-phat))
 
   # lbar = E[l|X]
-  lbar         <- switch(parameter, all = 1, treat = dhat.t/mean(d), untr = (1-dhat.t)/(1-mean(d)))
+  lbar         <- switch(parameter, all = 1, treat = dhat.t/phat, untr = (1-dhat.t)/(1-phat))
 
 
   # ate
@@ -65,8 +65,8 @@ ate.npm <- function(y, d, parameter = "all",
   gs[d == 0]   <- yhat0[d == 0]
   RRs          <- switch(parameter,
                          all   = ((d/dhat.t - (1-d)/(1-dhat.t)))*lbar,
-                         treat = d/mean(d) - ((1-d)/(1-dhat.t))*lbar,
-                         untr  = (d/dhat.t)*lbar - ((1-d)/(1-mean(d))))
+                         treat = d/phat - ((1-d)/(1-dhat.t))*lbar,
+                         untr  = (d/dhat.t)*lbar - ((1-d)/(1-phat)))
   Ms           <- switch(parameter,
                          all   = (yhat1 - yhat0)*l,
                          treat = (y - yhat0)*l,
@@ -77,8 +77,8 @@ ate.npm <- function(y, d, parameter = "all",
                          untr  = mean(Ms +  d*(y - gs)*RRs))
   psi.theta.s  <- switch(parameter,
                          all   = Ms + (y - gs)*RRs - theta.s * l,
-                         treat = Ms + (1-d)*(y - gs)*RRs - theta.s * l,
-                         untr  = Ms + d*(y - gs)*RRs - theta.s * l)
+                         treat = (Ms + (1-d)*(y - gs)*RRs - theta.s * l),
+                         untr  = Ms + d*(y - gs)*RRs - theta.s * l) / mean(l)
 
   # Scaling terms (still as "global" parameters)
 
@@ -89,10 +89,10 @@ ate.npm <- function(y, d, parameter = "all",
   # nu2
   Msa          <- switch(parameter,
                          all   = ( (1/dhat.t)*lbar + (1/(1-dhat.t))*lbar)*l,
-                         treat = ( (1/mean(d)) + (1/(1-dhat.t))*lbar)*l,
-                         untr  = ( (1/dhat.t)*lbar + (1/(1-mean(d))))*l)
+                         treat = ( (1/phat) + (1/(1-dhat.t))*lbar)*l,
+                         untr  = ( (1/dhat.t)*lbar + (1/(1-phat)))*l)
   nu2.s        <-  mean(2*Msa - RRs^2)
-  psi.nu2.s    <-  2*Msa  - RRs^2 - nu2.s
+  psi.nu2.s    <-  (2*Msa  - RRs^2 - (2 * l - 1) * nu2.s) / mean(2 * l - 1)
 
   # S2
   S2           <- sigma2.s*nu2.s
@@ -182,6 +182,7 @@ ate.att.atu.npm <- function(dml, target, trim = 0.02) {
   for(j in g){
     res <- list()
     for(i in 1:cf.reps){
+      phat   <- dml$fits[[i]]$preds$phat
       dhat   <- dml$fits[[i]]$preds$dhat
       yhat0  <- dml$fits[[i]]$preds$yhat0
       yhat1  <- dml$fits[[i]]$preds$yhat1
@@ -190,7 +191,8 @@ ate.att.atu.npm <- function(dml, target, trim = 0.02) {
                           yhat1 = yhat1,
                           yhat0 = yhat0,
                           dhat  = dhat,
-                          trim = trim)
+                          phat  = phat,
+                          trim  = trim)
 
       trimmed.all.idx <- res[[i]]$trim.summary$trimmed_indices$all
       trimmed.low.idx <- res[[i]]$trim.summary$trimmed_indices$low
@@ -225,6 +227,7 @@ group.ate.npm <- function(dml, groups, trim = 0.02) {
     idx <- groups == j
     res <- list()
     for(i in 1:cf.reps){
+      phat   <- dml$fits[[i]]$preds$phat
       dhat   <- dml$fits[[i]]$preds$dhat
       yhat0  <- dml$fits[[i]]$preds$yhat0
       yhat1  <- dml$fits[[i]]$preds$yhat1
@@ -232,6 +235,7 @@ group.ate.npm <- function(dml, groups, trim = 0.02) {
                           yhat1 = yhat1[idx],
                           yhat0 = yhat0[idx],
                           dhat  = dhat[idx],
+                          phat  = phat[idx],
                           trim = trim)
 
       trimmed.all.idx <- res[[i]]$trim.summary$trimmed_indices$all

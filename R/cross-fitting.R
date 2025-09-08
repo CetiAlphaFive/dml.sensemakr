@@ -37,7 +37,7 @@ cross.fitting <- function(y, d, x,
   }
 
   # predictions
-  dhat <- yhat <- yhat1 <-  yhat0 <- rep(NA, nobs)
+  dhat <- yhat <- yhat1 <-  yhat0 <- phat <- rep(NA, nobs)
 
   # data for npm
   dx   <- data.frame(d, x)
@@ -49,7 +49,7 @@ cross.fitting <- function(y, d, x,
 
     if (verbose) cat(b," ")
 
-
+    phat[Id[[b]]] <- mean(d[ -Id[[b]] ])
 
     if (model == "plm") {
       # d model
@@ -85,9 +85,9 @@ cross.fitting <- function(y, d, x,
       }
 
       if (!isTRUE(all.equal(yreg0, yreg1))) {
+        yreg <- yreg0
         warning("Only one method should be specified for yreg when using 'plm'; setting 'yreg' to 'yreg0'.")
       }
-      yreg <- yreg0
 
       args.yx  <- c(list(x = x[ -Id[[b]], ,drop = F], y = ytil ), yreg)
       model.yx <- silent.do.call(what = "train", args = args.yx, warnings = warnings)
@@ -216,6 +216,7 @@ cross.fitting <- function(y, d, x,
     out$rmse$yhat1 <- rmse_yhat1
     out$rmse$yhat <- rmse_yhat
   }
+  out$preds$phat <- phat
   if(verbose) cat("\n")
 
   return(out)

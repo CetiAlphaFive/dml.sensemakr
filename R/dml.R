@@ -344,13 +344,14 @@ dml <- function(y, d, x,
     }
 
     if (model == "npm") {
+      phat   <- cross.fit.i$preds$phat
       dhat   <- cross.fit.i$preds$dhat
       yhat0  <- cross.fit.i$preds$yhat0
       yhat1  <- cross.fit.i$preds$yhat1
       results[[i]] <- ate.npm(num(y),
                               num(d),
                               parameter = "all",
-                              yhat1, yhat0, dhat, trim = ps.trim)
+                              yhat1, yhat0, dhat, phat, trim = ps.trim)
 
       trimmed.all.idx <- results[[i]]$trim.summary$trimmed_indices$all
       trimmed.low.idx <- results[[i]]$trim.summary$trimmed_indices$low
