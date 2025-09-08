@@ -74,7 +74,7 @@ ate.npm <- function(y, d, parameter = "all",
   theta.s      <- switch(parameter,
                          all   = mean(Ms +  (y - gs)*RRs),
                          treat = mean(Ms +  (1-d)*(y - gs)*RRs),
-                         untr  = mean(Ms +  d*(y - gs)*RRs))
+                         untr  = mean(Ms +  d*(y - gs)*RRs)) / mean(l)
   psi.theta.s  <- switch(parameter,
                          all   = Ms + (y - gs)*RRs - theta.s * l,
                          treat = (Ms + (1-d)*(y - gs)*RRs - theta.s * l),
@@ -91,7 +91,7 @@ ate.npm <- function(y, d, parameter = "all",
                          all   = ( (1/dhat.t)*lbar + (1/(1-dhat.t))*lbar)*l,
                          treat = ( (1/phat) + (1/(1-dhat.t))*lbar)*l,
                          untr  = ( (1/dhat.t)*lbar + (1/(1-phat)))*l)
-  nu2.s        <-  mean(2*Msa - RRs^2)
+  nu2.s        <-  mean(2*Msa - RRs^2) / mean(2 * l - 1)
   psi.nu2.s    <-  (2*Msa  - RRs^2 - (2 * l - 1) * nu2.s) / mean(2 * l - 1)
 
   # S2
